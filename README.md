@@ -1,5 +1,6 @@
 # 🍽️ SmartBite – AI Restaurant Management & Customer Experience
 
+successfully deployed in vercel-( ai-restaurant-kappa.vercel.app)
 > **A next-generation restaurant website that enhances customer experience through AI-inspired interactive features while solving real-world restaurant challenges.**
 
 ![HTML](https://img.shields.io/badge/HTML5-✓-orange)
