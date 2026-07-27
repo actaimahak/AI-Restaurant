@@ -1,0 +1,286 @@
+/**
+ * SmartBite - AI Restaurant Management Frontend Script
+ */
+
+// --- DATA: Menu Items ---
+const menuData = [
+    { id: 1, name: "Neural Glazed Salmon", category: "healthy", price: 34, cal: 420, time: "15m", spicy: 1, vegan: false, allergens: "Fish", img: "https://images.unsplash.com/photo-1467003909585-2f8a72700288?auto=format&fit=crop&q=80&w=400", diet: "protein", taste: "savory" },
+    { id: 2, name: "Quantum BBQ Ribs", category: "bbq", price: 42, cal: 850, time: "25m", spicy: 3, vegan: false, allergens: "None", img: "https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&q=80&w=400", diet: "protein", taste: "spicy" },
+    { id: 3, name: "Bio-Garden Risotto", category: "vegetarian", price: 28, cal: 310, time: "20m", spicy: 0, vegan: false, allergens: "Dairy", img: "https://images.unsplash.com/photo-1476124369491-e7addf5db371?auto=format&fit=crop&q=80&w=400", diet: "low-cal", taste: "healthy" },
+    { id: 4, name: "Cyber Sushi Platter", category: "healthy", price: 55, cal: 380, time: "12m", spicy: 2, vegan: false, allergens: "Fish, Soy", img: "https://images.unsplash.com/photo-1579871494447-9811cf80d66c?auto=format&fit=crop&q=80&w=400", diet: "protein", taste: "savory" },
+    { id: 5, name: "Nano-Chocolate Dome", category: "desserts", price: 18, cal: 520, time: "10m", spicy: 0, vegan: true, allergens: "Nuts", img: "https://images.unsplash.com/photo-1547294391-4f6933c5127b?auto=format&fit=crop&q=80&w=400", diet: "none", taste: "sweet" },
+    { id: 6, name: "Artificial Truffle Pasta", category: "vegetarian", price: 31, cal: 440, time: "18m", spicy: 0, vegan: false, allergens: "Gluten", img: "https://images.unsplash.com/photo-1473093226795-af9932fe5856?auto=format&fit=crop&q=80&w=400", diet: "none", taste: "savory" },
+];
+
+document.addEventListener('DOMContentLoaded', () => {
+    initLoader();
+    initNavbar();
+    renderMenu(menuData);
+    initMenuFilters();
+    initAICalculator();
+    initQueueSimulator();
+    initOrderTracker();
+    initScrollReveal();
+    initFaq();
+    initReservation();
+    initCounter();
+});
+
+// --- Loader ---
+function initLoader() {
+    const loader = document.getElementById('loader');
+    window.addEventListener('load', () => {
+        setTimeout(() => {
+            loader.style.opacity = '0';
+            setTimeout(() => loader.style.display = 'none', 800);
+        }, 1500);
+    });
+}
+
+// --- Navbar & Mobile Menu ---
+function initNavbar() {
+    const navbar = document.getElementById('navbar');
+    const mobileBtn = document.getElementById('mobile-menu');
+    const navLinks = document.querySelector('.nav-links');
+    const backToTop = document.getElementById('backToTop');
+
+    window.addEventListener('scroll', () => {
+        if (window.scrollY > 50) {
+            navbar.classList.add('scrolled');
+            backToTop.style.display = 'block';
+        } else {
+            navbar.classList.remove('scrolled');
+            backToTop.style.display = 'none';
+        }
+    });
+
+    mobileBtn.addEventListener('click', () => {
+        navLinks.classList.toggle('active');
+        mobileBtn.classList.toggle('open');
+    });
+
+    backToTop.addEventListener('click', () => {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+}
+
+// --- Menu Functions ---
+function renderMenu(items) {
+    const grid = document.getElementById('menu-grid');
+    grid.innerHTML = '';
+
+    if (items.length === 0) {
+        grid.innerHTML = '<p class="text-center">No dishes found matching your criteria.</p>';
+        return;
+    }
+
+    items.forEach(item => {
+        const card = document.createElement('div');
+        card.className = 'menu-item reveal';
+        card.innerHTML = `
+            <img src="${item.img}" alt="${item.name}" class="menu-img">
+            <div class="menu-info">
+                <div class="menu-meta">
+                    <span><i class="fas fa-fire"></i> ${item.cal} Cal</span>
+                    <span><i class="fas fa-clock"></i> ${item.time}</span>
+                </div>
+                <h3>${item.name}</h3>
+                <p class="menu-meta">Allergens: ${item.allergens}</p>
+                <div class="menu-meta">
+                    <span class="menu-price">$${item.price}</span>
+                    <span>${'🌶️'.repeat(item.spicy)}</span>
+                </div>
+                <button class="btn-add" onclick="alert('Added to cart!')">Add to Cart</button>
+            </div>
+        `;
+        grid.appendChild(card);
+    });
+}
+
+function initMenuFilters() {
+    const searchInput = document.getElementById('menu-search');
+    const filterBtns = document.querySelectorAll('.filter-btn');
+
+    searchInput.addEventListener('input', (e) => {
+        const val = e.target.value.toLowerCase();
+        const filtered = menuData.filter(item => 
+            item.name.toLowerCase().includes(val) || 
+            item.allergens.toLowerCase().includes(val) ||
+            item.category.includes(val)
+        );
+        renderMenu(filtered);
+    });
+
+    filterBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            filterBtns.forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            const filter = btn.dataset.filter;
+            const filtered = filter === 'all' ? menuData : menuData.filter(i => i.category === filter);
+            renderMenu(filtered);
+        });
+    });
+}
+
+// --- AI Recommendation Engine ---
+function initAICalculator() {
+    const budgetInput = document.getElementById('pref-budget');
+    const budgetDisplay = document.getElementById('budget-display');
+    const btnRecommend = document.getElementById('btn-recommend');
+    const resultDiv = document.getElementById('ai-result');
+
+    budgetInput.addEventListener('input', (e) => {
+        budgetDisplay.textContent = e.target.value;
+    });
+
+    btnRecommend.addEventListener('click', () => {
+        const taste = document.getElementById('pref-taste').value;
+        const diet = document.getElementById('pref-diet').value;
+        const budget = parseInt(budgetInput.value);
+
+        // Simulated AI Logic
+        const match = menuData.find(item => 
+            item.price <= budget && 
+            (item.taste === taste || item.diet === diet)
+        ) || menuData[0];
+
+        resultDiv.classList.remove('hidden');
+        resultDiv.innerHTML = `
+            <div class="menu-item glass-card" style="width: 300px; animation: scaleUp 0.5s forwards;">
+                <h4 style="color:var(--primary); margin-bottom: 10px;">98% Match Found!</h4>
+                <img src="${match.img}" style="width:100%; border-radius:10px;">
+                <h3>${match.name}</h3>
+                <p>Perfect for your ${taste} craving.</p>
+                <button class="btn-primary" style="width:100%; margin-top:10px;">Order Now</button>
+            </div>
+        `;
+    });
+}
+
+// --- Live Queue Simulation ---
+function initQueueSimulator() {
+    const waitText = document.getElementById('waiting-count');
+    const waitTime = document.getElementById('wait-time');
+    const tablesOccupied = document.getElementById('tables-occupied');
+    const dotsContainer = document.getElementById('occupancy-dots');
+
+    function update() {
+        // Randomly fluctuate data
+        let waiting = Math.floor(Math.random() * 8) + 1;
+        let occupied = 20 + Math.floor(Math.random() * 6);
+        
+        waitText.textContent = waiting;
+        waitTime.textContent = waiting * 4;
+        tablesOccupied.textContent = occupied;
+
+        // Render occupancy dots
+        dotsContainer.innerHTML = '';
+        for (let i = 0; i < 30; i++) {
+            const dot = document.createElement('div');
+            dot.className = `dot ${i < occupied ? 'occupied' : ''}`;
+            dotsContainer.appendChild(dot);
+        }
+    }
+
+    setInterval(update, 5000);
+    update();
+}
+
+// --- Order Tracker ---
+function initOrderTracker() {
+    let currentStep = 1;
+    const msg = document.querySelector('.tracker-msg');
+    const messages = [
+        "Order received by our digital kitchen.",
+        "Chef Julian is selecting your ingredients.",
+        "Your meal is currently being flame-grilled.",
+        "Quality check complete. Heading to your table!"
+    ];
+
+    setInterval(() => {
+        if (currentStep < 4) {
+            currentStep++;
+            const stepEl = document.getElementById(`step-${currentStep}`);
+            stepEl.classList.add('active');
+            msg.textContent = messages[currentStep - 1];
+        } else {
+            // Reset for demo loop
+            for(let i=2; i<=4; i++) document.getElementById(`step-${i}`).classList.remove('active');
+            currentStep = 1;
+            msg.textContent = messages[0];
+        }
+    }, 10000);
+}
+
+// --- Scroll Reveal ---
+function initScrollReveal() {
+    const observerOptions = { threshold: 0.1 };
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.classList.add('active');
+            }
+        });
+    }, observerOptions);
+
+    document.querySelectorAll('.reveal, .reveal-left, .reveal-right').forEach(el => {
+        observer.observe(el);
+    });
+}
+
+// --- FAQ Accordion ---
+function initFaq() {
+    document.querySelectorAll('.accordion-header').forEach(header => {
+        header.addEventListener('click', () => {
+            const item = header.parentElement;
+            item.classList.toggle('active');
+        });
+    });
+}
+
+// --- Reservation System ---
+function initReservation() {
+    const form = document.getElementById('reservation-form');
+    form.addEventListener('submit', (e) => {
+        e.preventDefault();
+        showModal(`
+            <i class="fas fa-calendar-check" style="font-size: 3rem; color: var(--primary);"></i>
+            <h2>Reservation Confirmed!</h2>
+            <p>Thank you. Your table has been optimized and reserved. A confirmation SMS is on its way.</p>
+        `);
+        form.reset();
+    });
+}
+
+// --- Counters ---
+function initCounter() {
+    const counters = document.querySelectorAll('.counter');
+    counters.forEach(counter => {
+        const updateCount = () => {
+            const target = +counter.getAttribute('data-target');
+            const count = +counter.innerText;
+            const speed = 200;
+            const inc = target / speed;
+
+            if (count < target) {
+                counter.innerText = Math.ceil(count + inc);
+                setTimeout(updateCount, 1);
+            } else {
+                counter.innerText = target + (target > 100 ? '+' : '');
+            }
+        };
+        updateCount();
+    });
+}
+
+// --- Modal System ---
+function showModal(content) {
+    const overlay = document.getElementById('modal-overlay');
+    const contentArea = document.getElementById('modal-content');
+    contentArea.innerHTML = content;
+    overlay.style.display = 'flex';
+}
+
+function closeModal() {
+    document.getElementById('modal-overlay').style.display = 'none';
+}
